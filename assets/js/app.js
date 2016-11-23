@@ -24,8 +24,7 @@ const post = (url, data) =>
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
     })
-    .catch(e => log(e))
-    .then(r => r.json())
+
 // ----------------
 const Error = () => <div>Page Not Found</div>
 
@@ -58,7 +57,8 @@ class CreateChat extends Component {
                 </ul>
         }
 
-        return <form className="createchat-screen" onSubmit={e => this.submit(e)}>
+        return (
+            <form className="createchat-screen" onSubmit={e => this.submit(e)}>
 
             {this.state.errors ? <p>There were errors with your Chatroom:</p> : null}
             {err}
@@ -71,6 +71,7 @@ class CreateChat extends Component {
                 <button type="submit">Create Chatroom</button>
             </div>
         </form>
+        )
     }
 }
 
@@ -79,19 +80,6 @@ class Login extends Component {
         super(props)
         this.state = {}
     }
-    submit(e){
-        e.preventDefault()
-        if(onSubmit = "Login")
-        post('api/account/login').then(x => {
-            if(!x.errors) window.location.hash = `#/status/${x.id}`
-            this.setState({ errors: x.errors })
-            }).catch(e => alert(e))
-        if(onSubmit = "Register")
-        post('api/account/register').then(x => {
-            if(!x.errors) window.location.hash = `#/status/${x.id}`
-            this.setState({ errors: x.errors })
-        }).catch(e => alert(e))
-    }
     render(){
         var err 
         if(this.state.errors){
@@ -99,37 +87,69 @@ class Login extends Component {
                 {this.state.errors.map(x => <li>{x}</li>)}
                 </ul>
         } 
-        return <div>
-            <form id="login-form" action="/userview" method="Login" onSubmit={this.onSubmit}>
+        return (
+            <div className="login-stuff">
+                <RegisterBox />
+                <LoginBox />
+            </div>
+        )
+    }
+}
+class LoginBox extends Component {
+    constructor(props){
+        super(props)
+        this.state = {}
+    }
+    render(){
+        return (
+            <form id="login-form" onSubmit={this.onSubmit}>
 
-             <p>Please Log In</p>   
+                <p>Please Log In</p>   
 
-        <div>
-            <input ref="Email" type="email" placeholder="user@email.com" required/>
-            <input ref="Password" type="password" placeholder="Your Password"/>
-        </div>
-        <div>
-        <a href='/userview'>
-            <button type="submit">Log In</button>
-        </a>
-        </div>
-        </form>
+                <div>
+                    <input name="theEmail" ref="Email" type="email" placeholder="user@email.com" required/>
+                    <input name="thePassword" ref="Password" type="password" placeholder="Your Password"/>
+                </div>
+                <button type="submit">Log In</button>
+            </form>
+        )
+    }
+}
+class RegisterBox extends Component {
+    constructor(props){
+        super(props)
+        this.state = {}
+    }
 
-        <form id="register-form" action="/userview" method="Register" onSubmit={this.onSubmit}>
-       
-        <p> Or Create an account: </p>
-        <div>
-            <input ref="Email" type="email" placeholder="user@email.com" required/>
-            <input ref="Password" type="password" placeholder="Your Password"/>
-        </div>
-        <div>
-        <a href='/userview'>
-            <button type="submit">Register</button>
-        </a>
-        </div>
-        </form> 
-        </div>
-     
+    _handleSubmit(eventObject) {
+        eventObject.preventDefault()
+        //forms by default will refresh the page
+        var formEl = eventObject.target
+        window.form = formEl
+        var inputEmail = formEl.theEmail.value, 
+            inputPassword = formEl.thePassword.value
+        // the .value property on an input reveals what the user has entered for this input 
+        var promise = post('/account/register',{
+            email: inputEmail,
+            password: inputPassword
+        })
+        promise.then(
+            (resp) => console.log(resp),
+            (err) => console.log(err)
+        )
+    }
+    render() {
+        return (
+            <form id="register-form" onSubmit={this._handleSubmit}>
+        
+                <p> Or Create an account: </p>
+                <div>
+                    <input name="theEmail" ref="Email" type="email" placeholder="user@email.com" required/>
+                    <input name="thePassword" ref="Password" type="password" placeholder="Your Password"/>
+                </div>
+                    <button type="submit">Register</button>
+            </form> 
+        )
     }
 }
 
@@ -197,6 +217,7 @@ const Table = () =>
         </tbody>
     </table>
 
+
 class Home extends Component {
     constructor(props){
         super(props)
@@ -219,6 +240,77 @@ class Home extends Component {
     }
 }
 
+class RoomView extends Component {
+    constructor(props){
+        super(props)
+        this.state = {
+        }
+    }
+    componentDidMount(){
+        // here is where you'll fetch the room data. roomId, or any so-named parameter from the route,
+        // will be accessible via this.props.params.roomId
+    }
+    render() {
+        
+        console.log(this)
+        return (
+            <div>
+                <StoplightApp />
+            </div>
+        )
+    }
+
+}
+
+class StoplightApp extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            colors: ['fuchsia','teal','black']
+        }
+    }
+    render() {
+        return (
+            <div>
+                <h1>STOPLIGHT APP</h1>
+                {/*Stoplight will now access the array on "this.props", under the name "lightColors"
+                i.e. this.props.lightColors */}
+                <Stoplight lightColors={this.state.colors} />
+            </div>
+        )
+    }
+}
+
+class Stoplight extends Component {
+    constructor(props) {
+        super(props)
+    }
+    render() {
+        console.log('here comes the Stoplight component',this)
+        return (
+            <div>
+                <Light color={this.props.lightColors[0]}/>
+                <Light color={this.props.lightColors[1]}/>
+                <Light color={this.props.lightColors[2]}/>
+                {this.props.lightColors.map( oneColor => <Light color={oneColor}/> )}
+            </div>
+        )
+    }
+}
+
+class Light extends Component {
+    constructor(props) {
+        super(props)
+    }
+    render() {
+        var styleObject = {
+            background: this.props.color
+        }
+        return <div style={styleObject} className="light">
+                    <p>{this.props.color}</p>
+                </div>
+    }
+}
 class UserView extends Component {
     constructor(props){
         super(props)
@@ -227,10 +319,24 @@ class UserView extends Component {
         }
     }
     componentDidMount(){
-        get('/api/chatroom').then(chatrooms => {
-            chatrooms = chatrooms.reverse()
-            this.setState({items: chatrooms})
-        }).catch(e => log(e))
+    //    var getRooms = (uid) => 
+    //     get('/api/chatroom?handleId=' + uid).then(chatrooms => {
+    //             chatrooms = chatrooms.reverse()
+    //             this.setState({items: chatrooms})
+    //         }).catch(e => log(e))
+       
+    //    var promise = get('/account/userId')
+    //         .then(function(resp) {
+    //             var uid = resp.id
+    //             getRooms(uid)
+    //         })
+       
+
+    // see above for retrieving chatrooms particular to a user
+       get('/api/chatroom').then(chatrooms => {
+                chatrooms = chatrooms.reverse()
+                this.setState({items: chatrooms})
+            }).catch(e => log(e))
     }
     render(){
         return <div className="grid grid-3-600">
@@ -249,6 +355,7 @@ const reactApp = () =>
                 <Route path="/" component={Home}/>
                 <Route path="/login" component={Login}/>
                 <Route path="/userview" component={UserView}/>
+                <Route path="/status/:roomId" component={RoomView} />
                 <Route path="*" component={Error}/>
             </Router>
         </Layout>,
