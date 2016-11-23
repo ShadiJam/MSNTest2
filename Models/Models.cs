@@ -11,53 +11,54 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-public class Card : HasId
+public class Chatroom : HasId
 {
     [Required]
     public int Id { get; set; }
     [Required]
     public string Title { get; set; }
+    public ICollection<Message> Messages { get; set; }
+    public ICollection<Handle> Handles { get; set; }
+}
+
+public class Handle : HasId {
     [Required]
-    [StringLength(250, MinimumLength = 10)]
+    public int Id { get; set; }
+    [Required]
+    public string Name { get; set; }
+    [Required]
+    public string Email { get; set; }
+    [Required]
+    public string Password { get; set; }  
+}
+
+public class Message : HasId {
+    [Required]
+    public int Id { get; set; }
+    [Required]
     public string Text { get; set; }
-
-    public int CardListId {get;set;}
-}
-
-public class CardList : HasId {
+    public Handle Handle { get; set; }
+    public int HandleId { get; set; }
+    public Chatroom Chatroom { get; set; }
+    public int ChatroomId { get; set; }
     [Required]
-    public int Id { get; set; }
-    [Required]
-    public string Summary { get; set; }
-    [Required]
-    public List<Card> Cards { get; set; }
-
-    public int BoardId {get;set;}
-}
-
-public class Board : HasId {
-    [Required]
-    public int Id { get; set; }
-    [Required]
-    public string Title { get; set; }
-    [Required]
-    public List<CardList> Lists { get; set; }
+    public DateTime createdAt { get; set; }
 }
 
 // declare the DbSet<T>'s of our DB context, thus creating the tables
 public partial class DB : IdentityDbContext<IdentityUser> {
-    public DbSet<Card> Cards { get; set; }
-    public DbSet<CardList> CardLists { get; set; }
-    public DbSet<Board> Boards { get; set; }
+    public DbSet<Handle> Handles { get; set; }
+    public DbSet<Chatroom> Chatrooms { get; set; }
+    public DbSet<Message> Messages { get; set; }
 }
 
 // create a Repo<T> services
 public partial class Handler {
     public void RegisterRepos(IServiceCollection services){
-        Repo<Card>.Register(services, "Cards");
-        Repo<CardList>.Register(services, "CardLists",
-            d => d.Include(l => l.Cards));
-        Repo<Board>.Register(services, "Boards",
-            d => d.Include(b => b.Lists).ThenInclude(l => l.Cards));
+        Repo<Handle>.Register(services, "Handles");
+        Repo<Chatroom>.Register(services, "Chatrooms",
+            d => d.Include(m => m.Messages).ThenInclude(h => h.Handle));
+        Repo<Message>.Register(services, "Messages",
+            d => d.Include(c => c.Chatroom).ThenInclude(h => h.Handles));
     }
 }
